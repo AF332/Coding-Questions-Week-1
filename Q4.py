@@ -19,6 +19,6 @@ monthly_payment = monthly_interest_rate * loan
 
 total_payment = loan * no_years * (annual_interest_rate / 100)
 
-print(monthly_interest_rate)
-print(monthly_payment)
-print(total_payment)
+print(round(monthly_interest_rate, ndigits = 5))
+print(round(monthly_payment, ndigits = 2))
+print(round(total_payment, ndigits = 2))
