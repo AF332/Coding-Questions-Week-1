@@ -1,7 +1,21 @@
+# Figure out a way to get the indicators working properly on a local machine, (twelve data), use my api key 
+# Use plotly to plot the data
+# Find a broker that has low fees, and uses python to execute market orders 24hrs
+# Build a strategy price has to be over 200 ema, macd has to crossover signal line, and psar has to be under the candle
+# Stop loss is at the psar risk to ratio atleast 1 optimal 1.5 great 2
+# Look at other indicators that improve the entry and exit conditions 
+
+# ord and chr functions, math library, objects and methods, reading and processing string characters, includes concationations, reading user inputs ~1-2hr
+# Qs ~ 2hrs max
+
+
 import requests
 import plotly.graph_objects as go
 import pandas as pd
 import talib as TA
+
+# 8 runs per minute 
+# max 800 requesuts
 
 url = "https://api.twelvedata.com/time_series"
 api_key = "0cd77d4c6bb64776a65ff04c56409016"
