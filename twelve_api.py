@@ -13,6 +13,10 @@ import requests
 import plotly.graph_objects as go
 import pandas as pd
 import talib as TA
+import numpy as np
+import pandas_ta as ta # pandas_ta and talib are not installing on my laptop for some reason so i can't check if the code works, it's been happening this whole time.
+# There are 3 main ways of creating psar from my research which is to either use the library talib, pandas_ta or create it from scratch using numpy. if you look into my second commit i tried creating it myself but the same problem of the code not running happens.
+
 
 # 8 runs per minute 
 # max 800 requesuts
@@ -59,48 +63,10 @@ if response.status_code == 200:
         'close': close_prices
     })
 
-def calculate_sar(df, acceleration=0.02, maximum=0.2):
-    high = df['High']
-    low = df['Low']
-    close = df['Close']
-    sar = np.zeros(len(df))
-    af = acceleration
-    ep = low.iloc[0]
-    sar_direction = 1  # 1 for long, -1 for short
-    sar_extreme = low.iloc[0]
-    
-    for i in range(2, len(df)):
-        sar[i] = sar[i-1] + af * (sar_extreme - sar[i-1])
-        
-        if sar_direction == 1:
-            if low.iloc[i] < sar[i]:
-                sar_direction = -1
-                sar_extreme = high.iloc[i]
-                sar[i] = sar_extreme
-                af = acceleration
-        else:
-            if high.iloc[i] > sar[i]:
-                sar_direction = 1
-                sar_extreme = low.iloc[i]
-                sar[i] = sar_extreme
-                af = acceleration
-        
-        if sar_direction == 1:
-            if high.iloc[i] > sar_extreme:
-                sar_extreme = high.iloc[i]
-                af = min(af + acceleration, maximum)
-        else:
-            if low.iloc[i] < sar_extreme:
-                sar_extreme = low.iloc[i]
-                af = min(af + acceleration, maximum)
-    
-    return sar
+    # Calculate Parabolic SAR
+    df['psar'] = ta.psar(df['high'], df['low'])
 
-# Example usage
-# Assuming you have OHLC (Open, High, Low, Close) data in a pandas DataFrame called 'data'
-    sar = calculate_sar(data)
-
- # Create figure
+    # Create figure
     fig = go.Figure()
 
     # Add candlestick trace
@@ -124,4 +90,6 @@ def calculate_sar(df, acceleration=0.02, maximum=0.2):
                       yaxis_title="Price ($USD)")
 
     fig.show()
+else:
+    print("Error occurred:", response.status_code)
  
