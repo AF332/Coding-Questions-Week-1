@@ -1,7 +1,18 @@
+# Figure out a way to get the indicators working properly on a local machine, (twelve data), use my api key 
+# Use plotly to plot the data
+# Find a broker that has low fees, and uses python to execute market orders 24hrs
+# Build a strategy price has to be over 200 ema, macd has to crossover signal line, and psar has to be under the candle
+# Stop loss is at the psar risk to reward ratio atleast 1 optimal 1.5 great 2
+# Look at other indicators that improve the entry and exit conditions 
+
+# ord and chr functions, math library, objects and methods, reading and processing string characters, includes concationations, reading user inputs ~1-2hr
+# Qs ~ 2hrs max
+
+
 import requests
 import plotly.graph_objects as go
 import pandas as pd
-import pandas_ta as TA
+import talib as TA
 
 # 8 runs per minute 
 # max 800 requesuts
@@ -9,9 +20,9 @@ import pandas_ta as TA
 url = "https://api.twelvedata.com/time_series"
 api_key = "0cd77d4c6bb64776a65ff04c56409016"
 symbol = "AAPL"
-start_date = "2018-06-25"
+start_date = "2000-06-25"
 end_date = "2023-06-25"
-interval = "5min"
+interval = "1day"
 data_type = "Common Stock"
 
 params = {
@@ -47,13 +58,49 @@ if response.status_code == 200:
         'low': low_prices,
         'close': close_prices
     })
-    df["high"] = pd.to_numeric(df["high"], downcast="float")
-    df["low"] = pd.to_numeric(df["low"], downcast="float")
-    # Calculate Parabolic SAR
-    dbf = TA.psar(df['high'], df['low'])
-    df['sar'] = dbf['PSARl_0.02_0.2'].fillna(dbf['PSARs_0.02_0.2'])
-    print(df['sar'])
-    # Create figure
+
+def calculate_sar(df, acceleration=0.02, maximum=0.2):
+    high = df['High']
+    low = df['Low']
+    close = df['Close']
+    sar = np.zeros(len(df))
+    af = acceleration
+    ep = low.iloc[0]
+    sar_direction = 1  # 1 for long, -1 for short
+    sar_extreme = low.iloc[0]
+    
+    for i in range(2, len(df)):
+        sar[i] = sar[i-1] + af * (sar_extreme - sar[i-1])
+        
+        if sar_direction == 1:
+            if low.iloc[i] < sar[i]:
+                sar_direction = -1
+                sar_extreme = high.iloc[i]
+                sar[i] = sar_extreme
+                af = acceleration
+        else:
+            if high.iloc[i] > sar[i]:
+                sar_direction = 1
+                sar_extreme = low.iloc[i]
+                sar[i] = sar_extreme
+                af = acceleration
+        
+        if sar_direction == 1:
+            if high.iloc[i] > sar_extreme:
+                sar_extreme = high.iloc[i]
+                af = min(af + acceleration, maximum)
+        else:
+            if low.iloc[i] < sar_extreme:
+                sar_extreme = low.iloc[i]
+                af = min(af + acceleration, maximum)
+    
+    return sar
+
+# Example usage
+# Assuming you have OHLC (Open, High, Low, Close) data in a pandas DataFrame called 'data'
+    sar = calculate_sar(data)
+
+ # Create figure
     fig = go.Figure()
 
     # Add candlestick trace
@@ -77,5 +124,4 @@ if response.status_code == 200:
                       yaxis_title="Price ($USD)")
 
     fig.show()
-else:
-    print("Error occurred:", response.status_code)
+ 
